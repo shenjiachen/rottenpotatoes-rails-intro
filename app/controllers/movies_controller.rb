@@ -12,24 +12,56 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = ['G','PG','PG-13','R']
-    if params[:ratings]
-      @movies = Movie.where(rating: params[:ratings].keys)
-    end
-    case params[:sorting]
-    when'title'
-      @title_header = 'hilite'
-      @movies = Movie.order('title')
-    when'release_date'
-      @release_date_header = 'hilite'
-      @movies = Movie.order('release_date')
-    else
-       if params[:ratings] 
-        @movies = Movie.where(rating: params[:ratings].keys)
+    redirect =false
+      if params[:sorting]
+        @sorting = params[:sorting]
+        session[:sorting] = params[:sorting]
+               case params[:sorting]
+                  when'title'
+                    @title_header = 'hilite'
+                    @release_date_header = nil
+                  when'release_date'
+                    @release_date_header = 'hilite'
+                    @title_header = nil
+                  else
+                     @title_header = nil
+                     @release_date_header = nil
+               end
+      elsif session[:sorting]
+        @sorting = session[:sorting]
+        redirect =true
       else
-        @movies =Movie.all
+        @sorting = nil
       end
-    end
-  
+    
+      if params[:commit] == "Refresh" and params[:ratings].nil?
+          @ratings=nil
+          session[:ratings]=nil
+          @sorting=nil
+          session[:sorting]=nil
+        elsif params[:ratings]
+          @ratings = params[:ratings]
+          session[:ratings] = params[:ratings]
+        elsif session[:ratings]
+          @ratings = session[:ratings]
+          redirect = true
+        else
+          @ratings = nil
+        end
+
+         if redirect
+          redirect_to movies_path( :sorting=>@sorting, :ratings=>@ratings)
+        end
+
+        if @ratings and @sorting
+          @movies = Movie.where(:rating => @ratings.keys).order(@sorting)  
+        elsif @ratings
+          @movies = Movie.where(:rating => @ratings.keys)
+        elsif @sorting
+          @movies = Movie.order(@sorting)
+        else
+          @movies= Movie.all
+        end
   end
 
   def new
