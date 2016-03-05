@@ -11,6 +11,10 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @all_ratings = ['G','PG','PG-13','R']
+    if params[:ratings]
+      @movies = Movie.where(rating: params[:ratings].keys)
+    end
     case params[:sorting]
     when'title'
       @title_header = 'hilite'
@@ -19,8 +23,13 @@ class MoviesController < ApplicationController
       @release_date_header = 'hilite'
       @movies = Movie.order('release_date')
     else
-     @movies =Movie.all
-   end
+       if params[:ratings] 
+        @movies = Movie.where(rating: params[:ratings].keys)
+      else
+        @movies =Movie.all
+      end
+    end
+  
   end
 
   def new
